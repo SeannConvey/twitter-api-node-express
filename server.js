@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv'; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 import fetch from 'cross-fetch';
 import express from 'express';
+import { Client } from "twitter-api-sdk";
 import _ from 'lodash';
 
 dotenv.config()
@@ -22,14 +23,66 @@ const getToken = async ({ consumer_key, consumer_secret }) => {
   return access_token
 }
 
-app.post('/getTweet', async (req, res) => {
-  const token = await getToken({ 
-    consumer_key: req?.body?.context?.keys?.twitter?.['TWITTER_API_CONSUMER_KEY'],
-    consumer_secret: req?.body?.context?.keys?.twitter?.['TWITTER_API_CONSUMER_SECRET'],
-  })
-  console.log({ token })
+app.post('/getTweetSDK', async (req, res) => {
+  const token = req?.body?.context?.keys?.twitter?.TWITTER_BEARER_TOKEN
+  const client = new Client(token);
+  const response = await client.tweets.findTweetById({
+    "tweet.fields": [
+        "attachments",
+        "created_at",
+        "entities",
+        "geo_id",
+        "in_reply_to_user_id",
+        "possibly_sensitive",
+        "author_id",
+        "referenced_tweets",
+        "withheld",
+        "id",
+        "source",
+        "lang",
+        "text"
+    ],
+    // "expansions": [
+    //     "author_id",
+    //     "edit_history_tweet_ids"
+    // ],
+    // "media.fields": [
+    //     "url"
+    // ],
+    // "user.fields": [
+    //     "url"
+    // ]
+  });
+
+  console.log({ response })
+  return
   const headers = {
     'Bearer': token // || req?.body?.context?.keys?.twitter?.['TWITTER_BEARER_TOKEN'] || process.env.TWITTER_BEARER_TOKEN,
+  }
+  var requestOptions = { method: 'GET', headers: headers, redirect: 'follow' };
+  const tweetID = req.body?.kwArgs?.id
+  const url = `https://api.twitter.com/2/tweets/${tweetID}?tweet.fields=attachments,author_id,created_at,entities,geo,id,in_reply_to_user_id,lang,possibly_sensitive,referenced_tweets,source,text,withheld`
+  try {
+    const raw = await (await fetch(url, requestOptions)).text()
+    const result = JSON.parse(raw)
+    console.log({ result, headers })
+    const value = [
+      [ _.first(result?.data?.entities?.urls)?.expanded_url, result?.data?.text, result?.data?.created_at, result?.data?.author_id ],
+    ]
+    res.send(JSON.stringify({ value }));
+  } catch(err) {
+    console.error('error', err)
+  }
+})
+
+app.post('/getTweet', async (req, res) => {
+  // const token = await getToken({ 
+  //   consumer_key: req?.body?.context?.keys?.twitter?.['TWITTER_API_CONSUMER_KEY'],
+  //   consumer_secret: req?.body?.context?.keys?.twitter?.['TWITTER_API_CONSUMER_SECRET'],
+  // })
+  const token = req?.body?.context?.keys?.twitter?.['TWITTER_BEARER_TOKEN'] || process.env.TWITTER_BEARER_TOKEN
+  const headers = {
+    'Authorization': `Bearer ${token}`
   }
   var requestOptions = { method: 'GET', headers: headers, redirect: 'follow' };
   const tweetID = req.body?.kwArgs?.id
