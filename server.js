@@ -25,7 +25,7 @@ const getToken = async ({ consumer_key, consumer_secret }) => {
 
 app.post('/takeScreenshot', async (req, res) => {
   const url = req.body?.kwArgs?.url 
-  const token = req?.body?.context?.keys?.screenshotapi?.['API_TOKEN'] || process.env.SCREENSHOT_API_TOKEN
+  const token = req?.body?.context?.keys?.screenshotapi?.['API_TOKEN'] 
   const endpoint = `https://shot.screenshotapi.net/screenshot?`+ new URLSearchParams({
     token,
     // wait_for_event: 'load',
@@ -46,10 +46,9 @@ app.post('/takeScreenshot', async (req, res) => {
 
 app.post('/createNotionPage', async (req, res) => {
   const API_KEY = req?.body?.context?.keys?.notion?.['API_TOKEN'] || process.env.NOTION_API_TOKEN
+  const database_id = req.body?.kwArgs?.database_id
   const tweetURL = req.body?.kwArgs?.tweetURL 
-  const database_id = req.body?.kwArgs?.database_id 
   const screenshotURL = req.body?.kwArgs?.screenshotURL 
-  console.log(req.body)
 
   var myHeaders = {
     "Content-Type": "application/json",
@@ -99,7 +98,6 @@ app.post('/createNotionPage', async (req, res) => {
   try {
     const apiRequest = await fetch("https://api.notion.com/v1/pages/", requestOptions)
     const data = await apiRequest.json()
-    console.log({ data })
     const value = [
       [ data.url ],
     ]
