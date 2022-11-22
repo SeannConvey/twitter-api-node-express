@@ -23,58 +23,6 @@ const getToken = async ({ consumer_key, consumer_secret }) => {
   return access_token
 }
 
-app.post('/getTweetSDK', async (req, res) => {
-  const token = req?.body?.context?.keys?.twitter?.TWITTER_BEARER_TOKEN
-  const client = new Client(token);
-  const response = await client.tweets.findTweetById({
-    "tweet.fields": [
-        "attachments",
-        "created_at",
-        "entities",
-        "geo_id",
-        "in_reply_to_user_id",
-        "possibly_sensitive",
-        "author_id",
-        "referenced_tweets",
-        "withheld",
-        "id",
-        "source",
-        "lang",
-        "text"
-    ],
-    // "expansions": [
-    //     "author_id",
-    //     "edit_history_tweet_ids"
-    // ],
-    // "media.fields": [
-    //     "url"
-    // ],
-    // "user.fields": [
-    //     "url"
-    // ]
-  });
-
-  console.log({ response })
-  return
-  const headers = {
-    'Bearer': token // || req?.body?.context?.keys?.twitter?.['TWITTER_BEARER_TOKEN'] || process.env.TWITTER_BEARER_TOKEN,
-  }
-  var requestOptions = { method: 'GET', headers: headers, redirect: 'follow' };
-  const tweetID = req.body?.kwArgs?.id
-  const url = `https://api.twitter.com/2/tweets/${tweetID}?tweet.fields=attachments,author_id,created_at,entities,geo,id,in_reply_to_user_id,lang,possibly_sensitive,referenced_tweets,source,text,withheld`
-  try {
-    const raw = await (await fetch(url, requestOptions)).text()
-    const result = JSON.parse(raw)
-    console.log({ result, headers })
-    const value = [
-      [ _.first(result?.data?.entities?.urls)?.expanded_url, result?.data?.text, result?.data?.created_at, result?.data?.author_id ],
-    ]
-    res.send(JSON.stringify({ value }));
-  } catch(err) {
-    console.error('error', err)
-  }
-})
-
 app.post('/takeScreenshot', async (req, res) => {
   const url = req.body?.kwArgs?.url || 'https://twitter.com/trekkinglemon/status/1594946796354408448'
   const token = req?.body?.context?.keys?.screenshotapi?.['API_TOKEN'] || process.env.SCREENSHOT_API_TOKEN
@@ -86,9 +34,9 @@ app.post('/takeScreenshot', async (req, res) => {
     url
   })
   try {
-    const raw = await fetch(endpoint)
+    const rawResult = await fetch(endpoint)
     const value = [
-      [ raw.url ]
+      [ rawResult.url ]
     ]
     res.send(JSON.stringify({ value }));
   } catch(err) {
@@ -97,19 +45,61 @@ app.post('/takeScreenshot', async (req, res) => {
 })
 
 app.post('/createNotionPage', async (req, res) => {
-  const url = req.body?.kwArgs?.url || 'https://twitter.com/trekkinglemon/status/1594946796354408448'
-  const token = req?.body?.context?.keys?.screenshotapi?.['API_TOKEN'] || process.env.SCREENSHOT_API_TOKEN
-  const endpoint = `https://shot.screenshotapi.net/screenshot?`+ new URLSearchParams({
-    token,
-    // wait_for_event: 'load',
-    output: 'image',
-    file_type: 'png',
-    url
-  })
+  const API_KEY = req?.body?.context?.keys?.notion?.['API_TOKEN'] || process.env.NOTION_API_TOKEN
+  const tweetURL = req.body?.kwArgs?.tweetURL || 'https://twitter.com/trekkinglemon/status/1594946796354408448'
+  const database_id = req.body?.kwArgs?.database_id || "9d5ceee5fe7b4cf6b3d17b570f22f0d9"
+  const screenshotURL = req.body?.kwArgs?.screenshotURL || "https://screenshotapi-dot-net.storage.googleapis.com/twitter_com_trekkinglemon_status_15949467963544084_5eca30f16256.png"
+
+  var myHeaders = {
+    "Content-Type": "application/json",
+    "Notion-Version": "2022-02-22",
+    "Authorization": `Bearer ${API_KEY}`
+  }
+
+  var raw = JSON.stringify({
+    "parent": {
+      "database_id": database_id 
+    },
+    "properties": {
+      "Name": {
+        "title": [
+          {
+            "text": {
+              "content": "New Demo Article 001"
+            }
+          }
+        ]
+      },
+      "Tweet URL": {
+        "type": "url",
+        "url": tweetURL
+      },
+      "Screenshot": {
+        "type": "files",
+        "files": [
+          {
+            "name": "Demo screenshot",
+            "external": {
+              "url": screenshotURL
+            }
+          }
+        ]
+      }
+    }
+  });
+
+  var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+  };
+
   try {
-    const raw = await fetch(endpoint)
+    const apiRequest = await fetch("https://api.notion.com/v1/pages/", requestOptions)
+    const data = await apiRequest.json()
     const value = [
-      [ raw.url ],
+      [ data.url ],
     ]
     res.send(JSON.stringify({ value }));
   } catch(err) {
@@ -130,8 +120,8 @@ app.post('/getTweet', async (req, res) => {
   const tweetID = req.body?.kwArgs?.id
   const url = `https://api.twitter.com/2/tweets/${tweetID}?tweet.fields=attachments,author_id,created_at,entities,geo,id,in_reply_to_user_id,lang,possibly_sensitive,referenced_tweets,source,text,withheld`
   try {
-    const raw = await (await fetch(url, requestOptions)).text()
-    const result = JSON.parse(raw)
+    const rawResult = await (await fetch(url, requestOptions)).text()
+    const result = JSON.parse(rawResult)
     console.log({ result, headers })
     const value = [
       [ _.first(result?.data?.entities?.urls)?.expanded_url, result?.data?.text, result?.data?.created_at, result?.data?.author_id ],
