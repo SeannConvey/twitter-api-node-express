@@ -24,7 +24,7 @@ const getToken = async ({ consumer_key, consumer_secret }) => {
 }
 
 app.post('/takeScreenshot', async (req, res) => {
-  const url = req.body?.kwArgs?.url || 'https://twitter.com/trekkinglemon/status/1594946796354408448'
+  const url = req.body?.kwArgs?.url 
   const token = req?.body?.context?.keys?.screenshotapi?.['API_TOKEN'] || process.env.SCREENSHOT_API_TOKEN
   const endpoint = `https://shot.screenshotapi.net/screenshot?`+ new URLSearchParams({
     token,
@@ -46,9 +46,10 @@ app.post('/takeScreenshot', async (req, res) => {
 
 app.post('/createNotionPage', async (req, res) => {
   const API_KEY = req?.body?.context?.keys?.notion?.['API_TOKEN'] || process.env.NOTION_API_TOKEN
-  const tweetURL = req.body?.kwArgs?.tweetURL || 'https://twitter.com/trekkinglemon/status/1594946796354408448'
-  const database_id = req.body?.kwArgs?.database_id || "9d5ceee5fe7b4cf6b3d17b570f22f0d9"
-  const screenshotURL = req.body?.kwArgs?.screenshotURL || "https://screenshotapi-dot-net.storage.googleapis.com/twitter_com_trekkinglemon_status_15949467963544084_5eca30f16256.png"
+  const tweetURL = req.body?.kwArgs?.tweetURL 
+  const database_id = req.body?.kwArgs?.database_id 
+  const screenshotURL = req.body?.kwArgs?.screenshotURL 
+  console.log(req.body)
 
   var myHeaders = {
     "Content-Type": "application/json",
@@ -98,6 +99,7 @@ app.post('/createNotionPage', async (req, res) => {
   try {
     const apiRequest = await fetch("https://api.notion.com/v1/pages/", requestOptions)
     const data = await apiRequest.json()
+    console.log({ data })
     const value = [
       [ data.url ],
     ]
@@ -122,7 +124,6 @@ app.post('/getTweet', async (req, res) => {
   try {
     const rawResult = await (await fetch(url, requestOptions)).text()
     const result = JSON.parse(rawResult)
-    console.log({ result, headers })
     const value = [
       [ _.first(result?.data?.entities?.urls)?.expanded_url, result?.data?.text, result?.data?.created_at, result?.data?.author_id ],
     ]
