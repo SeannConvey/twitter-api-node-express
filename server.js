@@ -123,7 +123,7 @@ app.post('/getTweet', async (req, res) => {
     const rawResult = await (await fetch(url, requestOptions)).text()
     const result = JSON.parse(rawResult)
     const value = [
-      [ _.first(result?.data?.entities?.urls)?.expanded_url, result?.data?.text, result?.data?.created_at, result?.data?.author_id ],
+      ["hellow world.", _.first(result?.data?.entities?.urls)?.expanded_url, result?.data?.text, result?.data?.created_at, result?.data?.author_id ],
     ]
     res.send(JSON.stringify({ value }));
   } catch(err) {
