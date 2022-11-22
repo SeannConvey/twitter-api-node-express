@@ -75,6 +75,48 @@ app.post('/getTweetSDK', async (req, res) => {
   }
 })
 
+app.post('/takeScreenshot', async (req, res) => {
+  const url = req.body?.kwArgs?.url || 'https://twitter.com/trekkinglemon/status/1594946796354408448'
+  const token = req?.body?.context?.keys?.screenshotapi?.['API_TOKEN'] || process.env.SCREENSHOT_API_TOKEN
+  const endpoint = `https://shot.screenshotapi.net/screenshot?`+ new URLSearchParams({
+    token,
+    // wait_for_event: 'load',
+    output: 'image',
+    file_type: 'png',
+    url
+  })
+  try {
+    const raw = await fetch(endpoint)
+    const value = [
+      [ raw.url ]
+    ]
+    res.send(JSON.stringify({ value }));
+  } catch(err) {
+    console.error('error', err)
+  }
+})
+
+app.post('/createNotionPage', async (req, res) => {
+  const url = req.body?.kwArgs?.url || 'https://twitter.com/trekkinglemon/status/1594946796354408448'
+  const token = req?.body?.context?.keys?.screenshotapi?.['API_TOKEN'] || process.env.SCREENSHOT_API_TOKEN
+  const endpoint = `https://shot.screenshotapi.net/screenshot?`+ new URLSearchParams({
+    token,
+    // wait_for_event: 'load',
+    output: 'image',
+    file_type: 'png',
+    url
+  })
+  try {
+    const raw = await fetch(endpoint)
+    const value = [
+      [ raw.url ],
+    ]
+    res.send(JSON.stringify({ value }));
+  } catch(err) {
+    console.error('error', err)
+  }
+})
+
 app.post('/getTweet', async (req, res) => {
   // const token = await getToken({ 
   //   consumer_key: req?.body?.context?.keys?.twitter?.['TWITTER_API_CONSUMER_KEY'],
